@@ -7,14 +7,21 @@ from .models import Article, Tag, ArticleScope
 
 class RelationshipInlineFormset(BaseInlineFormSet):
     def clean(self):
+        main_scope_count = 0
         for form in self.forms:
-            form.cleaned_data
-            raise ValidationError('Тут всегда ошибка')
+            if not form.cleaned_data.get('DELETE', False):
+                if form.cleaned_data.get('is_main', False):
+                    main_scope_count += 1
+        if main_scope_count == 0:
+            raise ValidationError('Должен быть хотя бы один основной тег (is_main=True).')
+        if main_scope_count > 1:
+            raise ValidationError('Может быть только один основной тег.')
         return super().clean()
 
 
 class ArticleScopeInline(admin.TabularInline):
     model = ArticleScope
+    formset = RelationshipInlineFormset
 
 
 @admin.register(Article)
