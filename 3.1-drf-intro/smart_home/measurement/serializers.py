@@ -18,11 +18,12 @@ class MeasurementSerializer(serializers.ModelSerializer):
         representation.pop('sensor_id', None)
         return representation
 
-class SensorListSerializer(serializers.ModelSerializer):
 
+class SensorListSerializer(serializers.ModelSerializer):
     class Meta:
         model = TemperatureSensor
         fields = ['id', 'name', 'description', 'created_at']
+
 
 class SensorDetailSerializer(serializers.ModelSerializer):
     measurements = MeasurementSerializer(read_only=True, many=True)
@@ -30,4 +31,3 @@ class SensorDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = TemperatureSensor
         fields = ['id', 'name', 'description', 'created_at', 'measurements']
-
