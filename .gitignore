@@ -17,3 +17,4 @@ settings_local.py
 
 ### OS specific ###
 .DS_Store
+/my_test.py
