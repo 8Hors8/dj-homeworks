@@ -1,20 +1,26 @@
 from rest_framework import serializers
 
+from logistic.models import Product, StockProduct, Stock
+
 
 class ProductSerializer(serializers.ModelSerializer):
-    # настройте сериализатор для продукта
-    pass
+    class Meta:
+        model = Product
+        fields = ['id', 'title', 'description']
 
 
 class ProductPositionSerializer(serializers.ModelSerializer):
-    # настройте сериализатор для позиции продукта на складе
-    pass
+    class Meta:
+        model = StockProduct
+        fields = ['product', 'quantity', 'price']
 
 
 class StockSerializer(serializers.ModelSerializer):
     positions = ProductPositionSerializer(many=True)
 
-    # настройте сериализатор для склада
+    class Meta:
+        model = Stock
+        fields = ['id', 'address', 'products', 'positions']
 
     def create(self, validated_data):
         # достаем связанные данные для других таблиц
@@ -23,21 +29,27 @@ class StockSerializer(serializers.ModelSerializer):
         # создаем склад по его параметрам
         stock = super().create(validated_data)
 
-        # здесь вам надо заполнить связанные таблицы
-        # в нашем случае: таблицу StockProduct
-        # с помощью списка positions
-
+        for position_data in positions:
+            StockProduct.objects.create(stock=stock, **position_data)
         return stock
 
     def update(self, instance, validated_data):
-        # достаем связанные данные для других таблиц
-        positions = validated_data.pop('positions')
+        instance.address = validated_data.get('address', instance.address)
+        instance.save()
 
-        # обновляем склад по его параметрам
-        stock = super().update(instance, validated_data)
+        new_positions = validated_data.pop('positions', [])
+        existing_positions = {position.product_id: position for position in instance.positions.all()}
 
-        # здесь вам надо обновить связанные таблицы
-        # в нашем случае: таблицу StockProduct
-        # с помощью списка positions
+        for position_data in new_positions:
+            product_id = position_data['product'].id
+            quantity = position_data.get('quantity')
+            price = position_data.get('price')
 
-        return stock
+            if product_id in existing_positions:
+                position = existing_positions[product_id]
+                position.quantity = quantity if quantity is not None else position.quantity
+                position.price = price if price is not None else position.price
+                position.save()
+            else:
+                StockProduct.objects.create(stock=instance, **position_data)
+        return instance
