@@ -23,7 +23,8 @@ class AdvertisementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advertisement
         fields = ('id', 'title', 'description', 'creator',
-                  'status', 'created_at', )
+                  'status', 'created_at',)
+        read_only_filds = ['creator']
 
     def create(self, validated_data):
         """Метод для создания"""
@@ -41,5 +42,10 @@ class AdvertisementSerializer(serializers.ModelSerializer):
         """Метод для валидации. Вызывается при создании и обновлении."""
 
         # TODO: добавьте требуемую валидацию
+        user = self.context['request'].user
+        if self.context['request'].method == 'POST':
+            open_ads_count = Advertisement.objects.filter(creator=user, status='OPEN').count()
+            if open_ads_count >= 10:
+                raise serializers.ValidationError("Вы не можете создать больше 10 открытых объявлений.")
 
         return data
