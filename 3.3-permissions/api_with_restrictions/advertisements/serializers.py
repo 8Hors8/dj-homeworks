@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from advertisements.models import Advertisement
+from advertisements.models import Advertisement, FavoriteAdvertisement
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,7 +23,8 @@ class AdvertisementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advertisement
         fields = ('id', 'title', 'description', 'creator',
-                  'status', 'created_at',)
+                  'status', 'created_at',
+                  )
         read_only_filds = ['creator']
 
     def create(self, validated_data):
@@ -49,3 +50,10 @@ class AdvertisementSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Вы не можете создать больше 10 открытых объявлений.")
 
         return data
+
+
+class FavoriteAdvertisementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteAdvertisement
+        fields = ['id', 'user', 'advertisement', 'created_at']
+        read_only_fields = ['user']

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class AdvertisementStatusChoices(models.TextChoices):
@@ -7,6 +8,7 @@ class AdvertisementStatusChoices(models.TextChoices):
 
     OPEN = "OPEN", "Открыто"
     CLOSED = "CLOSED", "Закрыто"
+    DRAFT = "DRAFT",'Черновик'
 
 
 class Advertisement(models.Model):
@@ -16,7 +18,7 @@ class Advertisement(models.Model):
     description = models.TextField(default='')
     status = models.TextField(
         choices=AdvertisementStatusChoices.choices,
-        default=AdvertisementStatusChoices.OPEN
+        default=AdvertisementStatusChoices.DRAFT
     )
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -31,3 +33,17 @@ class Advertisement(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class FavoriteAdvertisement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name='favorite_ads'
+                             )
+    advertisement = models.ForeignKey('Advertisement',
+                                      on_delete=models.CASCADE,
+                                      related_name='favorited_by'
+                                      )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'advertisement')

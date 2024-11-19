@@ -21,3 +21,11 @@ class IsOwnerForDelete(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.creator == request.user
+
+class IsAdminUser(BasePermission):
+    """
+    Разрешение, позволяющее доступ только администраторам.
+    """
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_staff
