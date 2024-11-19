@@ -25,13 +25,11 @@ class AdvertisementViewSet(ModelViewSet):
         user = self.request.user
 
         if user.is_authenticated:
-
             return self.queryset.filter(Q(creator=user) | Q(status__in=['OPEN', 'CLOSED']))
         return self.queryset.filter(status='OPEN')
+
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
-
-
 
     def get_permissions(self):
         """Получение прав для действий."""
@@ -55,6 +53,7 @@ class AdvertisementViewSet(ModelViewSet):
 
         return super().get_permissions()
 
+
 class FavoriteAdvertisementViewSet(viewsets.ModelViewSet):
     queryset = FavoriteAdvertisement.objects.all()
     serializer_class = FavoriteAdvertisementSerializer
@@ -70,10 +69,8 @@ class FavoriteAdvertisementViewSet(viewsets.ModelViewSet):
             except Advertisement.DoesNotExist:
                 raise serializers.ValidationError("Объявление не найдено.")
 
-
             if advertisement.creator == self.request.user:
                 raise serializers.ValidationError("Вы не можете добавить свое объявление в избранное.")
-
 
         serializer.save(user=self.request.user)
 
