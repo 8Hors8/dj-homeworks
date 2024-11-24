@@ -18,3 +18,5 @@ settings_local.py
 ### OS specific ###
 .DS_Store
 /my_test.py
+/3.4-django-testing/django_testing/.coverage
+/3.4-django-testing/django_testing/config

@@ -1,0 +1,7 @@
+[run]
+omit =
+    */tests/*
+    */.venv/*
+    */manage.py
+    */students/migrations/*
+    *test_courses_api.py

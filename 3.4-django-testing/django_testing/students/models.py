@@ -1,4 +1,7 @@
+from django.core.exceptions import ValidationError
 from django.db import models
+
+from django_testing import settings
 
 
 class Student(models.Model):
@@ -18,3 +21,7 @@ class Course(models.Model):
         Student,
         blank=True,
     )
+
+    def clean(self):
+        if self.students.count() > 20:
+            raise ValidationError(f"Cannot have more than {settings.MAX_STUDENTS_PER_COURSE} students in a course.")
