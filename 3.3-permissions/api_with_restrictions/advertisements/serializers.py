@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from advertisements.models import Advertisement, FavoriteAdvertisement
 
@@ -43,11 +44,23 @@ class AdvertisementSerializer(serializers.ModelSerializer):
         """Метод для валидации. Вызывается при создании и обновлении."""
 
         # TODO: добавьте требуемую валидацию
+        instance = self.instance
         user = self.context['request'].user
-        if self.context['request'].method == 'POST':
-            open_ads_count = Advertisement.objects.filter(creator=user, status='OPEN').count()
-            if open_ads_count >= 10:
-                raise serializers.ValidationError("Вы не можете создать больше 10 открытых объявлений.")
+
+        # Проверка изменения статуса на 'OPEN'
+        new_status = data.get('status', instance.status if instance else None)
+
+        # Если новое объявление или обновляется статус
+        if new_status == 'OPEN':
+            user_open_ads_count = Advertisement.objects.filter(
+                creator=user, status='OPEN'
+            ).count()
+
+            # Проверка лимита открытых объявлений
+            if user_open_ads_count >= 10:
+                raise ValidationError(
+                    "Нельзя перевести объявление в статус 'OPEN', так как у вас уже 10 открытых объявлений."
+                )
 
         return data
 
@@ -57,3 +70,13 @@ class FavoriteAdvertisementSerializer(serializers.ModelSerializer):
         model = FavoriteAdvertisement
         fields = ['id', 'user', 'advertisement', 'created_at']
         read_only_fields = ['user']
+
+    def validate(self, data):
+        advertisement = data.get('advertisement')
+        user = self.context['request'].user
+
+        if advertisement.creator == user:
+            raise serializers.ValidationError(
+                "Вы не можете добавить свое объявление в избранное."
+            )
+        return data

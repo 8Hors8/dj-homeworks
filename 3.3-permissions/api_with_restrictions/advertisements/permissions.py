@@ -1,7 +1,13 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
-class IsOwnerReadOnly(BasePermission):
+class IsOwnerOrReadOnlyForDelete(BasePermission):
+    """
+    Разрешение, которое:
+    - Разрешает чтение всем (SAFE_METHODS),
+    - Разрешает изменение и удаление владельцу объекта или администратору.
+    """
+
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
@@ -10,23 +16,5 @@ class IsOwnerReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
+        return obj.creator == request.user or request.user.is_staff
 
-        return obj.creator == request.user
-
-
-class IsOwnerForDelete(BasePermission):
-    """
-    Разрешение, позволяющее удалять объект только его владельцу.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        return obj.creator == request.user
-
-
-class IsAdminUser(BasePermission):
-    """
-    Разрешение, позволяющее доступ только администраторам.
-    """
-
-    def has_permission(self, request, view):
-        return request.user and request.user.is_staff
